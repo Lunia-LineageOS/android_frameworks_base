@@ -42,6 +42,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Process;
 import android.os.RemoteException;
+import android.os.SystemProperties;
 import android.os.UserHandle;
 import android.os.UserManager;
 import android.provider.Settings.Global;
@@ -114,6 +115,8 @@ public class PhoneStatusBarPolicy
                 ScreenRecordUxController.StateChangeCallback {
     private static final String TAG = "PhoneStatusBarPolicy";
     private static final boolean DEBUG = Log.isLoggable(TAG, Log.DEBUG);
+    private static final boolean CONNECTIVITY_EXTENSIONS_SUPPORTED =
+            SystemProperties.getBoolean("ro.config.connectivity_extensions", true);
 
     static final int LOCATION_STATUS_ICON_ID = PrivacyType.TYPE_LOCATION.getIconId();
 
@@ -601,6 +604,7 @@ public class PhoneStatusBarPolicy
     }
 
     private void registerBlockedStatusChangedCallbackForLastResumedActivityUid() {
+        if (!CONNECTIVITY_EXTENSIONS_SUPPORTED) return;
         mUiBgExecutor.execute(() -> {
             try {
                 final int uid = ActivityTaskManager.getService().getLastResumedActivityUid();
