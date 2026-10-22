@@ -524,6 +524,11 @@ public class NetworkPolicyManagerService extends INetworkPolicyManager.Stub {
 
     private static final String PROP_SUB_PLAN_OWNER = "persist.sys.sub_plan_owner";
 
+    // Restricted networking mode and per-UID VPN lockdown back the firewall, which needs a
+    // Connectivity module built from source to work as intended.
+    private static final boolean CONNECTIVITY_EXTENSIONS_SUPPORTED =
+            SystemProperties.getBoolean("ro.config.connectivity_extensions", true);
+
     // TODO: this needs to be kept in sync with
     //  ConnectivitySettingsManager#UIDS_ALLOWED_ON_RESTRICTED_NETWORKS
     private static final String UIDS_ALLOWED_ON_RESTRICTED_NETWORKS =
@@ -856,8 +861,9 @@ public class NetworkPolicyManagerService extends INetworkPolicyManager.Stub {
         }
 
         public boolean isRestrictedModeEnabled() {
-            return Settings.Global.getInt(mContext.getContentResolver(),
-                    Settings.Global.RESTRICTED_NETWORKING_MODE, 0) != 0;
+            return CONNECTIVITY_EXTENSIONS_SUPPORTED
+                    && Settings.Global.getInt(mContext.getContentResolver(),
+                            Settings.Global.RESTRICTED_NETWORKING_MODE, 0) != 0;
         }
 
         @Override
@@ -3638,7 +3644,8 @@ public class NetworkPolicyManagerService extends INetworkPolicyManager.Stub {
     }
 
     private static boolean isLockdownPolicy(final int policy) {
-        return (policy & POLICY_LOCKDOWN_VPN_MASK) == POLICY_LOCKDOWN_VPN;
+        return CONNECTIVITY_EXTENSIONS_SUPPORTED
+                && (policy & POLICY_LOCKDOWN_VPN_MASK) == POLICY_LOCKDOWN_VPN;
     }
 
     @NonNull
